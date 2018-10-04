@@ -1,10 +1,11 @@
 library(shiny)
+library(data.table)
 library(leaflet)
 library(geojsonio)
 library(ggplot2)
 library(dplyr)
 
-df <- read.csv('./viva_real.csv')
+df <- fread('./viva_real.csv', encoding = 'UTF-8')
 
 bh.geojson <- geojson_read('bh.geojson', what = 'sp')
 
