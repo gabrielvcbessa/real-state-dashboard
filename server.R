@@ -5,21 +5,10 @@ library(geojsonio)
 library(ggplot2)
 library(dplyr)
 
-get_color <- function (d) {
-  case_when(d > 1000 ~ '#800026',
-            d > 500  ~ '#BD0026',
-            d > 200  ~ '#E31A1C',
-            d > 100  ~ '#FC4E2A',
-            d > 50   ~ '#FD8D3C',
-            d > 20   ~ '#FEB24C',
-            d > 10   ~ '#FED976',
-            TRUE     ~ '#FFEDA0')
-}
-
 bh.data <- fread('viva_real_bh.csv', encoding = 'UTF-8')
 
 bh.data <- bh.data[!duplicated(bh.data$id), ]
-iconv(bh.neigh$neighborhood,from="UTF-8",to="ASCII//TRANSLIT")
+
 bh.neigh <- bh.data %>% 
   group_by(neighborhood) %>% 
   summarise(properties = n())
@@ -29,18 +18,30 @@ bh.neigh <- transform(bh.neigh,
                                            from = 'UTF-8',
                                            to = 'ASCII//TRANSLIT'))
 
+bh.geojson.outer <- geojson_read('./bh.geojson')
+
 bh.geojson <- geojson_read('./bh_neigh.geojson', 
                            what = 'sp', 
                            encoding = 'UTF-8')
 
 bh.geojson@data <- transform(bh.geojson@data, 
-                             NOME = iconv(tolower(NOME), 
-                                          from = 'UTF-8',
-                                          to = 'ASCII//TRANSLIT'))
+                             neighborhood = iconv(tolower(NOME),
+                                                  from = 'UTF-8',
+                                                  to = 'ASCII//TRANSLIT'))
+
+bh.neigh <- left_join(bh.geojson@data, bh.neigh, by = 'neighborhood')
+
+bins <- c(1, 100, 250, 500, 1000, 2500, 5000, 7500, 10000, 12500)
+pal <- colorBin(
+  c('#FFFFC2', '#FFEDA0', '#FED976', '#FEB24C', 
+    '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'), 
+  domain = bh.neigh$properties, 
+  na.color = '#BDBDBD',
+  bins = bins)
 
 ui <- navbarPage(
   'Dashboard', id = 'nav',
-  tabPanel('Neighborhoods',
+  tabPanel('Heatmaps',
            tags$head(
              includeScript('reset_zoom.js'),
              includeCSS('styles.css')),
@@ -61,14 +62,21 @@ server <- function(input, output, session) {
   output$properties_map <- renderLeaflet({
     leaflet(bh.geojson) %>% 
       addTiles() %>% 
-      addPolygons(fillColor = '#6692CC',
-                  color = '#6692CC',
-                  fillOpacity = .1,
+      addPolygons(fillColor = ~pal(bh.neigh$properties),
+                  color = 'white',
+                  fillOpacity = 0.75,
                   weight = 1,
                   highlightOptions = highlightOptions(
                     weight = 2,
+                    color = 'white',
+                    fillOpacity = 1,
                     bringToFront = TRUE)) %>% 
-      addProviderTiles(providers$CartoDB.Positron)
+      addLegend(pal = pal, 
+                values = bh.neigh$properties, 
+                opacity = 0.7, 
+                title = NULL,
+                position = 'bottomright') %>% 
+      addProviderTiles(providers$CartoDB.Positron) 
   })
 }
 
