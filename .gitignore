@@ -5,6 +5,6 @@
 logs/**
 outputs/**
 .Rproj.user
-.Rhistory
-.RData
+.Rhistory*
+.RData*
 nohup.out

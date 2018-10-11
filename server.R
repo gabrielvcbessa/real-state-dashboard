@@ -1,84 +1,50 @@
 library(shiny)
-library(data.table)
 library(leaflet)
-library(geojsonio)
-library(ggplot2)
 library(dplyr)
+library(sp)
 
-bh.data <- fread('viva_real_bh.csv', encoding = 'UTF-8')
-
-bh.data <- bh.data[!duplicated(bh.data$id), ]
-
-bh.neigh <- bh.data %>% 
-  group_by(neighborhood) %>% 
-  summarise(properties = n())
-
-bh.neigh <- transform(bh.neigh, 
-                      neighborhood = iconv(tolower(neighborhood), 
-                                           from = 'UTF-8',
-                                           to = 'ASCII//TRANSLIT'))
-
-bh.geojson.outer <- geojson_read('./bh.geojson')
-
-bh.geojson <- geojson_read('./bh_neigh.geojson', 
-                           what = 'sp', 
-                           encoding = 'UTF-8')
-
-bh.geojson@data <- transform(bh.geojson@data, 
-                             neighborhood = iconv(tolower(NOME),
-                                                  from = 'UTF-8',
-                                                  to = 'ASCII//TRANSLIT'))
-
-bh.neigh <- left_join(bh.geojson@data, bh.neigh, by = 'neighborhood')
-
-bins <- c(1, 100, 250, 500, 1000, 2500, 5000, 7500, 10000, 12500)
-pal <- colorBin(
-  c('#FFFFC2', '#FFEDA0', '#FED976', '#FEB24C', 
-    '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'), 
-  domain = bh.neigh$properties, 
-  na.color = '#BDBDBD',
-  bins = bins)
-
-ui <- navbarPage(
-  'Dashboard', id = 'nav',
-  tabPanel('Heatmaps',
-           tags$head(
-             includeScript('reset_zoom.js'),
-             includeCSS('styles.css')),
-           
-           div(class = 'outer',
-               leafletOutput('properties_map', 
-                             width = '100%', 
-                             height = '100%'),
-               
-               absolutePanel(id = 'controls', class = 'modal', fixed = TRUE,
-                             draggable = TRUE, left = 'auto', right = 20, bottom = 'auto',
-                             width = 330, height = 'auto',
-                             
-                             textInput(label = 'Search for a place',
-                                       inputId = 'place-search')))))
+source('heatmap.R')
 
 server <- function(input, output, session) {
   output$properties_map <- renderLeaflet({
-    leaflet(bh.geojson) %>% 
-      addTiles() %>% 
-      addPolygons(fillColor = ~pal(bh.neigh$properties),
-                  color = 'white',
-                  fillOpacity = 0.75,
-                  weight = 1,
-                  highlightOptions = highlightOptions(
-                    weight = 2,
-                    color = 'white',
-                    fillOpacity = 1,
-                    bringToFront = TRUE)) %>% 
-      addLegend(pal = pal, 
-                values = bh.neigh$properties, 
-                opacity = 0.7, 
-                title = NULL,
-                position = 'bottomright') %>% 
-      addProviderTiles(providers$CartoDB.Positron) 
+    bh_heatmap(bh.neigh$properties, bh.neigh$ID_BAIRRO)
+  })
+  
+  observeEvent(input$properties_map_shape_click, {
+    click = input$properties_map_shape_click
+    proxy = leafletProxy('properties_map', data = bh.geojson)
+    
+    shape.index = match(click$id, bh.neigh$ID_BAIRRO)
+    poly = bh.geojson@polygons[[shape.index]]@Polygons[[1]]
+    centroid = slot(poly, 'labpt')
+    
+    proxy %>% setView(lng = centroid[1], lat = centroid[2], zoom = 15) 
+  })
+  
+  observeEvent(input$properties_map_shape_mouseover, {
+    mouseover = input$properties_map_shape_mouseover
+    proxy = leafletProxy('properties_map', data = bh.geojson)
+    
+    shape.index = match(mouseover$id, bh.neigh$ID_BAIRRO)
+    
+    new_info <- paste(bh.neigh[shape.index, 'NOME'],
+                      ': ',
+                      bh.neigh[shape.index, 'properties'],
+                      ' properties', sep = '')
+    
+    output$neigh_info <- renderText({ new_info })
+  })
+  
+  observeEvent(input$properties_map_shape_mouseout, {
+    mouseout = input$properties_map_shape_mouseout
+    proxy = leafletProxy('properties_map', data = bh.geojson)
+    
+    new_info <- paste(sum(bh.neigh[, 'properties'], na.rm = TRUE),
+                      ' properties', sep = '')
+    
+    output$neigh_info <- renderText({ new_info })
   })
 }
 
-shinyApp(ui, server)
+
 
