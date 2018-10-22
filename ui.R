@@ -43,4 +43,7 @@ ui <- navbarPage(
                              textOutput('sale_price'),
                              
                              h6('Rental Price (median):'),
-                             textOutput('rental_price')))))
+                             textOutput('rental_price'),
+                             
+                             h6('Area (median):'),
+                             textOutput('usable_area')))))

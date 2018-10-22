@@ -17,9 +17,9 @@ price_to_text <- function (price, price_m2) {
   
   paste('R$ ',
         two_decimals(price),
-        ' (',
+        ' (R$ ',
         two_decimals(price_m2),
-        '/m²)', sep = '')
+        ' / m²)', sep = '')
 }
 
 set_info <- function (output, data, neigh_id = NA) {
@@ -35,6 +35,8 @@ set_info <- function (output, data, neigh_id = NA) {
     properties_count <- paste(format(properties, big.mark = ',', small.mark = '.'),
                               ' properties', sep = '')
     
+    usable_area <- data[shape.index, 'm_usable_area']
+    
     m_sale_price <- data[shape.index, 'm_sale_price']
     m_sale_price_m2 <- data[shape.index, 'm_sale_price_m2']
     
@@ -45,6 +47,8 @@ set_info <- function (output, data, neigh_id = NA) {
     
     # Info regarding city properties
     properties <- sum(data[, 'properties'], na.rm = TRUE)
+    
+    usable_area <- median(data[, 'm_usable_area'], na.rm = TRUE)
     
     m_sale_price <- median(data[, 'm_sale_price'], na.rm = TRUE)
     m_sale_price_m2 <- median(data[, 'm_sale_price_m2'], na.rm = TRUE)
@@ -57,6 +61,10 @@ set_info <- function (output, data, neigh_id = NA) {
     properties_count <- paste(format(properties, big.mark = ',', small.mark = '.'),
                               ' properties', sep = '')
   }
+  
+  output$usable_area <- renderText({
+    paste(two_decimals(usable_area), 'm²')
+  }) 
   
   sale_price <- price_to_text(m_sale_price, m_sale_price_m2)
   rental_price <- price_to_text(m_rental_price, m_rental_price_m2)
