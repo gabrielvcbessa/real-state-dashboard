@@ -7,4 +7,5 @@ outputs/**
 .Rproj.user
 .Rhistory*
 .RData*
+rsconnect/*
 nohup.out

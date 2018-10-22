@@ -1,0 +1,20 @@
+unit_types <- c(
+  'Apartment' = 'APARTMENT',
+  'Business' = 'BUSINESS',
+  'Commercial allotment land' = 'COMMERCIAL_ALLOTMENT_LAND',
+  'Commercial building' = 'COMMERCIAL_BUILDING',
+  'Commercial property' = 'COMMERCIAL_PROPERTY',
+  'Condominium' = 'CONDOMINIUM',
+  'Country house' = 'COUNTRY_HOUSE',
+  'Farm' = 'FARM',
+  'Flat' = 'FLAT',
+  'Home' = 'HOME',
+  'Kitnet' = 'KITNET',
+  'Office' = 'OFFICE',
+  'Penthouse' = 'PENTHOUSE',
+  'Residential allotment land' = 'RESIDENTIAL_ALLOTMENT_LAND',
+  'Residential Building' = 'RESIDENTIAL_BUILDING',
+  'Shed deposit warehouse' = 'SHED_DEPOSIT_WAREHOUSE',
+  'Store' = 'STORE',
+  'Two story house' = 'TWO_STORY_HOUSE'
+)

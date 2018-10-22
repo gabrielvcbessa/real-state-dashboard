@@ -2,6 +2,9 @@ library(shiny)
 library(leaflet)
 library(dplyr)
 
+source('unit_types.R')
+source('info_types.R')
+
 ui <- navbarPage(
   'Dashboard', id = 'nav',
   tabPanel('Heatmap',
@@ -23,16 +26,21 @@ ui <- navbarPage(
                              width = 330,
                              height = 'auto',
                              
-                             helpText('Control Panel'),
-                             
                              selectInput('unit_types', 
-                                         'Unit type',
-                                         c('All' = 'all',
-                                           'Apartments' = 'APARTMENT')),
+                                         'Property Type:',
+                                         unit_types),
                              
-                             selectInput('price_type', 
-                                         'Price',
-                                         c('Rental' = 'rental',
-                                           'Sale' = 'sale')),
+                             selectInput('color', 
+                                         'Color',
+                                         info_types,
+                                         selected = 'properties'),
                              
-                             textOutput('neigh_info')))))
+                             h5(textOutput('zone_title')),
+                             
+                             textOutput('properties_count'),
+                             
+                             h6('Sale Price (median):'),
+                             textOutput('sale_price'),
+                             
+                             h6('Rental Price (median):'),
+                             textOutput('rental_price')))))
