@@ -33,7 +33,7 @@ ui <- navbarPage(
                              selectInput('color', 
                                          'Color',
                                          info_types,
-                                         selected = 'properties'),
+                                         selected = 'm_rental_price'),
                              
                              h5(textOutput('zone_title')),
                              

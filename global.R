@@ -7,7 +7,7 @@ library(tidyr)
 source('ui.R')
 source('server.R')
 
-bh.data <- fread('./data/viva_real.csv', encoding = 'UTF-8')
+bh.data <- fread('./data/viva_real_small.csv', encoding = 'UTF-8')
 
 bh.data <- bh.data[!duplicated(bh.data$id), ] %>%
   mutate(rental_price_m2 = case_when(!is.na(rental_price) & usable_area != 0 ~ rental_price / usable_area,
